@@ -1,0 +1,64 @@
+blueprint:
+  name: DIVERA 24/7 – Alarmierung
+  description: >
+    Löst aus, wenn ein neuer DIVERA-Alarm eingeht.
+    Optional können Stichwörter definiert werden, bei denen KEINE Aktion
+    ausgeführt werden soll (z. B. "THL, Feuer Klein, Übung").
+  domain: automation
+  input:
+    sensor_entity:
+      name: DIVERA Sensor
+      description: Der DIVERA-Alarm-Sensor
+      selector:
+        entity:
+          domain: sensor
+
+    filter_keywords:
+      name: Stichwörter filtern (optional)
+      description: >
+        Kommagetrennte Stichwörter, bei denen die Automation NICHT auslösen soll.
+        Groß-/Kleinschreibung wird ignoriert. Leer lassen um alle Alarme durchzulassen.
+        Beispiel: THL, Feuer Klein, Übung
+      default: ""
+      selector:
+        text:
+
+    actions:
+      name: Aktionen
+      description: Was soll bei einem neuen Alarm passieren?
+      selector:
+        action:
+
+variables:
+  sensor_entity: !input sensor_entity
+  filter_keywords: !input filter_keywords
+
+trigger:
+  - platform: state
+    entity_id: !input sensor_entity
+    from: "Kein aktiver Einsatz"
+
+condition:
+  # Nicht auslösen wenn Einsatz bereits geschlossen
+  - condition: template
+    value_template: >
+      {{ state_attr(sensor_entity, 'geschlossen') != true }}
+
+  # Stichwort-Filter
+  - condition: template
+    value_template: >
+      {% set stichwort = (state_attr(sensor_entity, 'stichwort') or '') | lower %}
+      {% set keywords = filter_keywords.split(',') | map('trim') | map('lower') | reject('eq', '') | list %}
+      {% if keywords | count == 0 %}
+        true
+      {% else %}
+        {% set ns = namespace(match=false) %}
+        {% for kw in keywords %}
+          {% if kw in stichwort %}
+            {% set ns.match = true %}
+          {% endif %}
+        {% endfor %}
+        {{ not ns.match }}
+      {% endif %}
+
+action: !input actions

@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "DIVERA 24/7 einrichten",
+        "description": "Gib deinen DIVERA-API-Schlüssel ein. Du findest ihn in DIVERA unter Einstellungen → DEBUG → Accesskey.",
+        "data": {
+          "access_key": "API-Schlüssel"
+        }
+      },
+      "select_ucr": {
+        "title": "Einheit auswählen",
+        "description": "Wähle die Einheit aus, für die Alarme angezeigt werden sollen.",
+        "data": {
+          "ucr_id": "Einheit"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Ungültiger API-Schlüssel. Bitte prüfe den Schlüssel und versuche es erneut.",
+      "cannot_connect": "Verbindung zum DIVERA-Server fehlgeschlagen. Bitte prüfe deine Internetverbindung."
+    },
+    "abort": {
+      "already_configured": "Diese Einheit ist bereits konfiguriert.",
+      "no_units": "Keine Einheiten für diesen API-Schlüssel gefunden."
+    }
+  }
+}
