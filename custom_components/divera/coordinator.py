@@ -149,9 +149,10 @@ class DiveraCoordinator(DataUpdateCoordinator):
                 return
             except Exception as err:  # noqa: BLE001
                 _LOGGER.warning(
-                    "DIVERA WebSocket-Verbindung unterbrochen (%s). "
+                    "DIVERA: WebSocket-Verbindung unterbrochen – Grund: %s (%s). "
                     "Neuer Versuch in %s Sekunden.",
                     err,
+                    type(err).__name__,
                     WS_RECONNECT_DELAY,
                 )
             await asyncio.sleep(WS_RECONNECT_DELAY)
@@ -185,7 +186,13 @@ class DiveraCoordinator(DataUpdateCoordinator):
                         aiohttp.WSMsgType.CLOSING,
                         aiohttp.WSMsgType.CLOSED,
                     ):
-                        _LOGGER.debug("DIVERA: WebSocket-Verbindung geschlossen")
+                        close_code = msg.data
+                        close_reason = msg.extra or "kein Grund angegeben"
+                        _LOGGER.warning(
+                            "DIVERA: WebSocket-Verbindung getrennt – Code: %s, Grund: %s",
+                            close_code,
+                            close_reason,
+                        )
                         return
 
     async def _handle_ws_message(self, raw: str, ws: aiohttp.ClientWebSocketResponse) -> None:
