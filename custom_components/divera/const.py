@@ -10,5 +10,7 @@ CONF_UCR_NAME = "ucr_name"
 
 # Fallback-Polling-Intervall (Sekunden) falls WS-Verbindung unterbrochen ist
 FALLBACK_POLL_INTERVAL = 300
-# Wartezeit (Sekunden) vor erneutem Verbindungsversuch nach Fehler
+# Wartezeit (Sekunden) vor erstem Verbindungsversuch nach Fehler
 WS_RECONNECT_DELAY = 10
+# Maximale Wartezeit (Sekunden) beim exponentiellen Backoff
+WS_MAX_RECONNECT_DELAY = 300

@@ -18,6 +18,7 @@ from .const import (
     DOMAIN,
     FALLBACK_POLL_INTERVAL,
     JWT_URL,
+    WS_MAX_RECONNECT_DELAY,
     WS_RECONNECT_DELAY,
     WS_URL,
 )
@@ -41,14 +42,38 @@ class DiveraCoordinator(DataUpdateCoordinator):
         self.ucr_id: str | None = entry.data.get(CONF_UCR_ID)
         self._jwt: str | None = None
         self._ws_task: asyncio.Task | None = None
+        self._ws_connected: bool = False
 
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            # Fallback-Polling falls WS ausfällt
+            # Polling startet aktiv; wird deaktiviert sobald WS verbunden ist
             update_interval=timedelta(seconds=FALLBACK_POLL_INTERVAL),
         )
+
+    # ------------------------------------------------------------------
+    # Fallback-Polling Steuerung
+    # ------------------------------------------------------------------
+
+    def _set_ws_connected(self, connected: bool) -> None:
+        """WebSocket-Status setzen und Fallback-Polling entsprechend an-/abschalten."""
+        if connected == self._ws_connected:
+            return
+        self._ws_connected = connected
+        if connected:
+            _LOGGER.info("DIVERA: WebSocket aktiv – Fallback-Polling deaktiviert")
+            self.update_interval = None
+            if self._unsub_refresh:
+                self._unsub_refresh()
+                self._unsub_refresh = None
+        else:
+            _LOGGER.warning(
+                "DIVERA: WebSocket nicht verfügbar – wechsle in Fallback-Polling (%ds Intervall)",
+                FALLBACK_POLL_INTERVAL,
+            )
+            self.update_interval = timedelta(seconds=FALLBACK_POLL_INTERVAL)
+            self._schedule_refresh()
 
     # ------------------------------------------------------------------
     # JWT
@@ -137,24 +162,34 @@ class DiveraCoordinator(DataUpdateCoordinator):
             self._ws_task = None
 
     async def _ws_loop(self) -> None:
-        """Endlosschleife: WebSocket verbinden, Events verarbeiten, bei Fehler neu verbinden."""
+        """Endlosschleife: WebSocket verbinden, Events verarbeiten, bei Fehler mit Backoff neu verbinden."""
+        delay = WS_RECONNECT_DELAY
         while True:
             try:
                 await self._ws_run_once()
+                # Saubere Trennung: in Fallback wechseln und Delay zurücksetzen
+                self._set_ws_connected(False)
+                delay = WS_RECONNECT_DELAY
             except asyncio.CancelledError:
                 _LOGGER.debug("DIVERA WebSocket-Task wurde beendet")
+                self._set_ws_connected(False)
                 return
             except ConfigEntryAuthFailed:
                 _LOGGER.error("DIVERA: Ungültiger Access Key – WebSocket wird nicht neu verbunden")
+                self._set_ws_connected(False)
                 return
             except Exception as err:  # noqa: BLE001
+                self._set_ws_connected(False)
                 _LOGGER.warning(
                     "DIVERA: WebSocket-Verbindung unterbrochen – Grund: %s (%s). "
                     "Neuer Versuch in %s Sekunden.",
                     err,
                     type(err).__name__,
-                    WS_RECONNECT_DELAY,
+                    delay,
                 )
+                await asyncio.sleep(delay)
+                delay = min(delay * 2, WS_MAX_RECONNECT_DELAY)
+                continue
             await asyncio.sleep(WS_RECONNECT_DELAY)
 
     async def _ws_run_once(self) -> None:
@@ -207,6 +242,7 @@ class DiveraCoordinator(DataUpdateCoordinator):
 
         if msg_type == "init":
             _LOGGER.info("DIVERA: WebSocket erfolgreich authentifiziert (init empfangen)")
+            self._set_ws_connected(True)
 
         elif msg_type == "jwtExpired":
             _LOGGER.info("DIVERA: JWT abgelaufen – hole neuen JWT und authentifiziere neu")
