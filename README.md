@@ -1,5 +1,7 @@
 # DIVERA 24/7 – Home Assistant Integration
 
+[![Buy me a Beer](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20Beer&emoji=🍺&slug=lassefactory&button_colour=FFDD00&font_colour=000000&font_family=Comic&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/lassefactory)
+
 Eine inoffizielle Home Assistant Integration für DIVERA 24/7, die Einsätze in Echtzeit über eine WebSocket-Verbindung empfängt.
 
 ---
@@ -19,6 +21,8 @@ Die Integration verbindet sich dauerhaft per **WebSocket** mit den DIVERA-Server
 ---
 
 ## Installation über HACS (empfohlen)
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=lassefactory&repository=divera-hacs)
 
 1. HACS in Home Assistant öffnen
 2. Oben rechts auf die **drei Punkte** klicken → **Benutzerdefinierte Repositories**
