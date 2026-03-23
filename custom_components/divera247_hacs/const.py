@@ -1,4 +1,4 @@
-DOMAIN = "divera"
+DOMAIN = "divera247_hacs"
 
 BASE_URL = "https://app.divera247.com/api/v2/pull/all"
 JWT_URL = "https://app.divera247.com/api/v2/auth/jwt"

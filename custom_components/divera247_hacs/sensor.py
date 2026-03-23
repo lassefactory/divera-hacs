@@ -42,7 +42,7 @@ class DiveraSensor(CoordinatorEntity[DiveraCoordinator], SensorEntity):
         ucr_id: str = entry.data.get(CONF_UCR_ID, entry.entry_id)
 
         self._attr_name = f"DIVERA {ucr_name}"
-        self._attr_unique_id = f"divera_{ucr_id}"
+        self._attr_unique_id = f"divera247_hacs_{ucr_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, ucr_id)},
             name=f"DIVERA 24/7 – {ucr_name}",
