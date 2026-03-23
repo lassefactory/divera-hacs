@@ -152,7 +152,7 @@ class DiveraCoordinator(DataUpdateCoordinator):
         """WebSocket-Schleife als dauerhaften Background-Task starten."""
         self._ws_task = self.hass.async_create_background_task(
             self._ws_loop(),
-            name="divera247_hacs_websocket",
+            name="divera_websocket",
         )
 
     def async_stop_websocket(self) -> None:
