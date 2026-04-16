@@ -1,7 +1,8 @@
 blueprint:
   name: DIVERA 24/7 – Alarmierung
   description: >
-    Löst aus, wenn ein neuer DIVERA-Alarm eingeht.
+    Löst aus, wenn ein neuer DIVERA-Alarm eingeht – auch wenn bereits ein
+    aktiver Einsatz vorliegt (Attribut-Trigger auf "stichwort").
     Optional können Stichwörter definiert werden, bei denen KEINE Aktion
     ausgeführt werden soll (z. B. "THL, Feuer Klein, Übung").
   domain: automation
@@ -36,9 +37,21 @@ variables:
 trigger:
   - platform: state
     entity_id: !input sensor_entity
-    from: "Kein aktiver Einsatz"
+    attribute: stichwort
 
 condition:
+  # Kein Alarm-State (leer, unbekannt, "Kein aktiver Einsatz")
+  - condition: template
+    value_template: >
+      {{
+        trigger.to_state is not none
+        and trigger.to_state.state not in
+          ['Kein aktiver Einsatz', '', 'unknown', 'unavailable']
+        and trigger.to_state.attributes.stichwort is defined
+        and trigger.to_state.attributes.stichwort not in
+          ['Kein aktiver Einsatz', '', none]
+      }}
+
   # Nicht auslösen wenn Einsatz bereits geschlossen
   - condition: template
     value_template: >
